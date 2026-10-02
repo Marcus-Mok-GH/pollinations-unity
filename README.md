@@ -47,8 +47,8 @@ Never commit it or serialize it into a scene, prefab, or build.
 
 1. Import the sample: **Window → Package Manager → Pollinations for Unity → Samples → Demo Scene → Import**.
 2. Open `Assets/Samples/Pollinations for Unity/Demo Scene/DemoScene.unity`. It contains a camera and a `PollinationsDemo` object; the overlay UI (RawImage + status text) builds itself at runtime.
-3. Store your development key via **Tools → Pollinations → Development API Key** (EditorPrefs only, never serialized into scenes or builds), or set the `POLLINATIONS_API_KEY` environment variable.
-4. Right-click the component header and choose **Run Pollinations demo** (or call `Run()` from code).
+3. In Play mode, set a publishable App Key on the component and choose **Connect Pollen** from its context menu. Approve the code in your browser. Alternatively, for editor-only development, set a key via **Tools → Pollinations → Development API Key** or `POLLINATIONS_API_KEY`.
+4. Choose **Run Pollinations demo** from the component context menu (or call `Run()` from code).
 
 Expected result, in order:
 

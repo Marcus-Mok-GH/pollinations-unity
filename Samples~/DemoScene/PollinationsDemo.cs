@@ -21,6 +21,7 @@ namespace Pollinations.Unity.Samples
     {
         [Header("Prompt used for the image; the text call describes it in words.")]
         public string Prompt = "A tiny pixel-art garden on an alien planet";
+        public string AppKey;
 
         public RawImage Image;
         public Text Status;
@@ -28,6 +29,7 @@ namespace Pollinations.Unity.Samples
 
         /// <summary>In-memory key override; not serialized by Unity.</summary>
         public string ApiKey { get; set; }
+        private PollinationsClient _client;
 
         private void Awake()
         {
@@ -41,30 +43,51 @@ namespace Pollinations.Unity.Samples
                 BuildDefaultUi();
             if (string.IsNullOrEmpty(ApiKey))
                 ApiKey = ResolveApiKey();
+            _client = new PollinationsClient { ApiKey = ApiKey };
+        }
+
+        [ContextMenu("Connect Pollen")]
+        public async void ConnectPollen()
+        {
+            if (string.IsNullOrEmpty(AppKey))
+            {
+                SetStatus("Set a publishable App Key on this component first.");
+                return;
+            }
+
+            try
+            {
+                var result = await new PollinationsAuth(AppKey).AuthorizeAsync(progress => SetStatus(progress.Message));
+                if (result.State == DeviceFlowState.Granted)
+                    _client.DeviceToken = result.AccessToken;
+                SetStatus(result.State == DeviceFlowState.Granted ? "Connected. Run the demo." : "Connection " + result.State + ".");
+            }
+            catch (Exception exception)
+            {
+                SetStatus("Connection failed: " + exception.Message);
+            }
         }
 
         [ContextMenu("Run Pollinations demo")]
         public async void Run()
         {
-            if (string.IsNullOrEmpty(ApiKey))
+            if (string.IsNullOrEmpty(_client.DeviceToken) && string.IsNullOrEmpty(ApiKey))
             {
-                SetStatus("No development key set. Use Tools > Pollinations > Development API Key " +
-                          "in the editor, or authorize with PollinationsAuth for a player-funded build.");
+                SetStatus("Connect Pollen with an App Key, or set a development key in Tools > Pollinations.");
                 return;
             }
 
-            var client = new PollinationsClient { ApiKey = ApiKey };
             SetStatus("Generating text...");
-            var text = await client.TextAsync("Describe this scene in one cheerful sentence: " + Prompt);
+            var text = await _client.TextAsync("Describe this scene in one cheerful sentence: " + Prompt);
             SetStatus(text.Text);
 
             SetStatus("Generating image...");
-            var image = await client.ImageAsync(Prompt, width: 512, height: 512);
+            var image = await _client.ImageAsync(Prompt, width: 512, height: 512);
             if (Image != null)
                 Image.texture = image.Texture;
 
             SetStatus("Generating speech...");
-            var speech = await client.SpeechAsync(text.Text);
+            var speech = await _client.SpeechAsync(text.Text);
             if (Audio != null)
             {
                 Audio.clip = speech.Clip;

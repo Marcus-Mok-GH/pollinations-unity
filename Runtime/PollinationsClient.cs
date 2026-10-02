@@ -62,7 +62,7 @@ namespace Pollinations.Unity
         public string DeviceToken { get; set; }
         public string TextModel { get; set; } = "openai/gpt-5.4-nano";
         public string ImageModel { get; set; } = "tongyi-mai/z-image-turbo";
-        public string SpeechModel { get; set; } = "elevenlabs/eleven-v3";
+        public string SpeechModel { get; set; } = "openai/tts-1";
 
         private string AccessToken => string.IsNullOrEmpty(DeviceToken) ? ApiKey : DeviceToken;
 
@@ -118,8 +118,7 @@ namespace Pollinations.Unity
             {
                 prompt = prompt,
                 model = string.IsNullOrEmpty(model) ? ImageModel : model,
-                width = width,
-                height = height,
+                size = width + "x" + height,
                 n = 1,
                 response_format = "b64_json"
             };
@@ -182,6 +181,7 @@ namespace Pollinations.Unity
             using (var web = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
             {
                 web.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                web.uploadHandler.contentType = "application/json";
                 web.downloadHandler = new DownloadHandlerAudioClip(url, AudioTypeFor(responseFormat));
                 SetHeaders(web);
                 await SendAsync(web, cancellationToken);
@@ -325,8 +325,7 @@ namespace Pollinations.Unity
         {
             public string prompt;
             public string model;
-            public int width;
-            public int height;
+            public string size;
             public int n;
             public string response_format;
         }
